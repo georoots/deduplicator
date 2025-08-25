@@ -21,7 +21,7 @@ A: Use the app GeoRoots Splitter and split the file by the property you need. If
 
 
 
-## About GeoRoots: Open Source Coffee Industry Tools for EUDR Compliance and geo traceability
+## About GeoRoots: Open Source Toolkit for EUDR Compliance and geo traceability
 
 GeoRoots is a collection of minimalistic, open-source tools designed specifically for EU Deforestation Regulation (EUDR) requirements and enhancing geo traceability.
 
