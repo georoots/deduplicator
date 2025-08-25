@@ -1,0 +1,1903 @@
+<!--
+    GeoJSON Deduplicator Tool
+    Copyright (C) 2025 GeoRoots
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deduplicator - GeoRoots</title>
+    
+    <style>
+        /* CSS Variables for consistent color scheme */
+        :root {
+            --primary-color: #1b4332;
+            --secondary-color: #40916c;
+            --accent-color: #efffef;
+            --dark-color: #1b4332;
+            --light-color: #f8f9fa;
+            --danger-color: #dc6575;
+            --confirm-color: #40916c;
+            --text-color: #333;
+            --border-color: #e9ecef;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            
+            /* Gray Scale */
+            --gray-light: #f1f4f2;
+            --gray-medium: #6c757d;
+            --gray-dark: #495057;
+            --gray-border: #e9ecef;
+            --gray-input: #ddd;
+            
+            /* Basic Colors */
+            --white: #ffffff;
+            --black: #000000;
+            
+            /* Status Colors */
+            --error-bg: #f8d7da;
+            --error-border: #f5c6cb;
+            --error-text: #721c24;
+            --success-bg: #d4edda;
+            --success-border: #c3e6cb;
+            --success-text: #155724;
+            --warning-bg: #fff3cd;
+            --warning-border: #ffeaa7;
+            --warning-text: #856404;
+            
+            /* Overlay and UI Colors */
+            --modal-overlay: rgba(0, 0, 0, 0.7);
+            --loading-overlay: rgba(0, 0, 0, 0.6);
+            --spinner-bg: #f3f3f3;
+            
+            /* Hover States */
+            --danger-hover: #d14a5a;
+            --success-hover: #4a9f6b;
+            --secondary-hover: #2d5a3d;
+            
+            /* Special Elements */
+            --drop-border: #ccc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-color);
+            background: var(--light-color);
+            min-height: 100vh;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .main-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px var(--shadow-color);
+            overflow: hidden;
+        }
+
+        .main-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: var(--secondary-color);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .language-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .language-selector select {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+        }
+
+        .language-selector select option {
+            background: var(--white);
+            color: var(--text-color);
+        }
+
+        .language-selector label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .header .small-print {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 8px;
+            line-height: 1.3;
+        }
+
+        .header .small-print a {
+            color: var(--white);
+            transition: color 0.3s ease;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            max-width: 1800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .panel {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px var(--shadow-color);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 1600px;
+        }
+
+
+
+        .panel-header {
+            background: var(--gray-light);
+            border-bottom: 1px solid var(--gray-border);
+            padding: 15px 20px;
+            font-weight: 600;
+            color: var(--gray-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-content {
+            flex: 1;
+            padding: 20px;
+            overflow: auto;
+        }
+
+        .file-drop-area {
+            width: 100%;
+            height: 200px;
+            border: 3px dashed var(--drop-border);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            background-color: var(--gray-light);
+            cursor: pointer;
+        }
+
+        .file-drop-area.is-active {
+            border-color: var(--confirm-color);
+            background-color: rgba(88, 183, 117, 0.1);
+        }
+
+        .file-drop-area.has-error {
+            border-color: var(--danger-color);
+            background-color: rgba(220, 101, 117, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            color: var(--gray-medium);
+            margin-bottom: 1rem;
+        }
+
+        .file-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--gray-light);
+            border-radius: 8px;
+            border: 1px solid var(--gray-border);
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: var(--gray-dark);
+            margin-bottom: 10px;
+        }
+
+        .file-stats {
+            font-size: 0.9rem;
+            color: var(--gray-medium);
+        }
+
+                 .duplicates-section {
+             margin-top: 20px;
+         }
+
+         .color-explanation {
+             font-size: 0.9rem;
+             color: var(--gray-medium);
+             margin-bottom: 15px;
+             font-style: italic;
+         }
+
+         .collapsible-section {
+             margin-bottom: 20px;
+         }
+
+         .collapsible-header {
+             background: var(--gray-light);
+             border: 1px solid var(--gray-border);
+             border-radius: 8px 8px 0 0;
+             padding: 15px 20px;
+             cursor: pointer;
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+             font-weight: 600;
+             color: var(--gray-dark);
+             transition: background-color 0.2s ease;
+         }
+
+         .collapsible-header:hover {
+             background: var(--gray-border);
+         }
+
+         .collapsible-header.collapsed {
+             border-radius: 8px;
+         }
+
+         .collapsible-content {
+             border: 1px solid var(--gray-border);
+             border-top: none;
+             border-radius: 0 0 8px 8px;
+             padding: 20px;
+             background: var(--white);
+         }
+
+         .collapsible-content.collapsed {
+             display: none;
+         }
+
+         .toggle-icon {
+             font-size: 1.2rem;
+             transition: transform 0.2s ease;
+         }
+
+         .toggle-icon.collapsed {
+             transform: rotate(-90deg);
+         }
+
+                 .duplicate-group {
+             background: var(--warning-bg);
+             border: 1px solid var(--warning-border);
+             border-radius: 8px;
+             margin-bottom: 15px;
+             overflow: hidden;
+         }
+
+         .duplicate-group.different-properties {
+             background: var(--error-bg);
+             border: 1px solid var(--error-border);
+         }
+
+        .duplicate-header {
+             background: #ffc107;
+             color: #856404;
+             padding: 10px 15px;
+             font-weight: 600;
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+        }
+
+         .duplicate-header-different {
+             background: #e74c3c;
+             color: white;
+         }
+
+        .duplicate-header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .duplicate-header-title {
+            font-weight: 600;
+        }
+
+        .duplicate-header-preview {
+            font-size: 0.8rem;
+            color: var(--gray-medium);
+            font-family: monospace;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 2px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .duplicate-header-preview:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .duplicate-header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+                 .duplicate-count {
+             background: #856404;
+             color: white;
+             padding: 2px 8px;
+             border-radius: 12px;
+             font-size: 0.8rem;
+         }
+
+         .duplicate-count.different-properties {
+             background: #c53030;
+         }
+
+        .duplicate-items {
+            padding: 15px;
+        }
+
+        .comparison-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .duplicate-item {
+            background: var(--white);
+            border: 1px solid var(--gray-border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .duplicate-item.selected {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .duplicate-item-header {
+            padding: 10px 15px;
+            background: var(--gray-light);
+            border-bottom: 1px solid var(--gray-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .duplicate-item-header:hover {
+            background: var(--gray-border);
+        }
+
+        .duplicate-item-content {
+            padding: 15px;
+            display: block;
+        }
+
+        .properties-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .property-item {
+            background: var(--gray-light);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .property-key {
+            font-weight: 600;
+            color: var(--gray-dark);
+        }
+
+        .property-value {
+            color: var(--gray-medium);
+            word-break: break-word;
+        }
+
+        .radio-selector {
+            margin-right: 10px;
+        }
+
+        .error-message {
+            background: var(--error-bg);
+            color: var(--error-text);
+            border: 1px solid var(--error-border);
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .success-message {
+            background: var(--success-bg);
+            color: var(--success-text);
+            border: 1px solid var(--success-border);
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .warning-message {
+            background: var(--warning-bg);
+            color: var(--warning-text);
+            border: 1px solid var(--warning-border);
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .btn {
+            background: var(--confirm-color);
+            color: var(--white);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: var(--confirm-color);
+        }
+
+        .btn-success:hover {
+            background: var(--success-hover);
+            box-shadow: 0 4px 12px rgba(74, 159, 107, 0.3);
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-hover);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--gray-medium);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-dark);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--gray-light);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid var(--gray-border);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--confirm-color);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--gray-medium);
+            margin-top: 5px;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--loading-overlay);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            flex-direction: column;
+            color: white;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loading-spinner {
+            border: 8px solid var(--spinner-bg);
+            border-top: 8px solid var(--confirm-color);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--gray-border);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--confirm-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .download-links {
+            margin-top: 20px;
+        }
+
+        .download-link {
+            display: block;
+            padding: 10px;
+            background: var(--gray-light);
+            border: 1px solid var(--gray-border);
+            border-radius: 6px;
+            margin-bottom: 10px;
+            text-decoration: none;
+            color: var(--gray-dark);
+            transition: all 0.3s ease;
+        }
+
+        .download-link:hover {
+            background: var(--gray-border);
+            transform: translateY(-1px);
+        }
+
+        .no-duplicates-message {
+            text-align: center;
+            color: var(--success-text);
+            font-style: italic;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: var(--success-bg);
+            border-radius: 8px;
+            border: 1px solid var(--success-border);
+        }
+
+        /* Large screens */
+        @media (min-width: 1200px) {
+            .content-area {
+                grid-template-columns: 1fr 1fr;
+                gap: 30px;
+            }
+        }
+
+        /* Medium screens */
+        @media (max-width: 1024px) {
+            body {
+                padding: 15px;
+            }
+            
+            .content-area {
+                padding: 10px;
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .panel {
+                max-width: 100%;
+            }
+            
+            .comparison-layout {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .header {
+                padding: 15px;
+            }
+        }
+
+        /* Small screens */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 20px 15px 15px 15px;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .header p {
+                font-size: 1rem;
+            }
+            
+            .language-selector {
+                position: static;
+                justify-content: center;
+                margin-bottom: 15px;
+            }
+            
+            .file-drop-area {
+                min-height: 44px;
+            }
+            
+            .btn {
+                min-height: 44px;
+            }
+            
+            .comparison-layout {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+
+        /* Very small screens */
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .header p {
+                font-size: 0.9rem;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-container">
+            <div class="header">
+            <div class="language-selector">
+                <label for="languageSelect" aria-label="Select language">🌐</label>
+                <select id="languageSelect" aria-label="Language selection">
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                    <option value="pt">Português</option>
+                </select>
+            </div>
+            <h1 data-i18n="title">GeoJSON Deduplicator Tool</h1>
+            <p data-i18n="subtitle">Detect and remove duplicate features from GeoJSON files</p>
+            <p data-i18n="privacy" class="small-print">Your files and any of their content is only processed locally in your browser and none of your information is sent to anyone else.</p>
+            <p data-i18n="license" class="small-print">This software is free, released under GPLv3 open source license.</p>
+                         <p class="small-print"><span data-i18n="downloadLatest">Download latest version and other tools on</span> <a href="https://georoots.eu/" target="_blank" rel="noopener noreferrer">https://georoots.eu/</a></p>
+        </div>
+
+        <div class="content-area">
+            <!-- Input Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    📤
+                    <span data-i18n="inputPanel">Input File</span>
+                </div>
+                <div class="panel-content">
+                    <div class="file-drop-area" id="dropArea">
+                        <div class="upload-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                                <path d="M12,12L16,16H13.5V19H10.5V16H8L12,12Z"/>
+                            </svg>
+                        </div>
+                        <p data-i18n="dropFile">Drop your GeoJSON/JSON file here</p>
+                        <p data-i18n="orClickBrowse">or click to browse</p>
+                        <input type="file" id="fileInput" accept=".json,.geojson" style="display: none;" aria-label="Upload GeoJSON file">
+                    </div>
+
+                    <div id="fileInfo" class="file-info hidden">
+                        <div class="file-name" id="fileName"></div>
+                        <div class="file-stats" id="fileStats"></div>
+                    </div>
+
+                    <div id="errorMessages"></div>
+                </div>
+            </div>
+
+            <!-- Analysis Panel -->
+            <div class="panel hidden">
+                <div class="panel-header">
+                    🔍
+                    <span data-i18n="analysisPanel">Analysis</span>
+                </div>
+                <div class="panel-content">
+                    <div id="fileStats">
+                        <div class="stats">
+                            <div class="stat-card">
+                                <span id="totalFeatures" class="stat-number">0</span>
+                                <div class="stat-label" data-i18n="features">Features</div>
+                            </div>
+                            <div class="stat-card">
+                                <span id="uniqueFeatures" class="stat-number">0</span>
+                                <div class="stat-label" data-i18n="uniqueFeatures">Unique Features</div>
+                            </div>
+                            <div class="stat-card">
+                                <span id="duplicateGroups" class="stat-number">0</span>
+                                <div class="stat-label" data-i18n="duplicateGroups">Duplicate Groups</div>
+                            </div>
+                                                         <div class="stat-card">
+                                 <span id="totalDuplicates" class="stat-number">0</span>
+                                 <div class="stat-label" data-i18n="totalDuplicates">Total Duplicates</div>
+                             </div>
+                             <div class="stat-card">
+                                 <span id="identicalGroups" class="stat-number">0</span>
+                                 <div class="stat-label" data-i18n="identicalGroups">Identical Groups</div>
+                             </div>
+                             <div class="stat-card">
+                                 <span id="differentGroups" class="stat-number">0</span>
+                                 <div class="stat-label" data-i18n="differentGroups">Different Groups</div>
+                             </div>
+                        </div>
+                    </div>
+
+                                         <div id="duplicatesSection" class="duplicates-section hidden">
+                         <h4 data-i18n="duplicateFeatures">Duplicate Features:</h4>
+                         <p class="color-explanation" data-i18n="colorExplanation">Groups are red when features have different properties, yellow when all properties match.</p>
+                         
+                         <!-- Different Properties Section -->
+                         <div class="collapsible-section">
+                             <div class="collapsible-header" id="differentPropertiesHeader">
+                                 <span id="differentPropertiesTitle">Duplicates with different properties:</span>
+                                 <span class="toggle-icon">▼</span>
+                             </div>
+                             <div class="collapsible-content" id="differentPropertiesContent">
+                                 <div id="differentPropertiesContainer"></div>
+                             </div>
+                         </div>
+                         
+                         <!-- Identical Properties Section -->
+                         <div class="collapsible-section">
+                             <div class="collapsible-header collapsed" id="identicalPropertiesHeader">
+                                 <span id="identicalPropertiesTitle">Duplicates with identical properties:</span>
+                                 <span class="toggle-icon collapsed">▼</span>
+                             </div>
+                             <div class="collapsible-content collapsed" id="identicalPropertiesContent">
+                                 <div id="identicalPropertiesContainer"></div>
+                             </div>
+                         </div>
+                     </div>
+
+                    <div id="noDuplicatesMessage" class="no-duplicates-message hidden">
+                        <p data-i18n="noDuplicatesFound">No duplicate features found! Your file is already clean.</p>
+                    </div>
+
+                    <div id="actionButtons" class="button-group hidden">
+                        <button id="removeDuplicatesBtn" class="btn btn-success">
+                            🗑️ <span data-i18n="removeDuplicates">Remove Duplicates</span>
+                        </button>
+                        <button id="resetBtn" class="btn btn-danger">
+                            🔄 <span data-i18n="reset">Reset</span>
+                        </button>
+                    </div>
+
+                    <div class="progress-bar hidden" id="progressBar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+
+                    <div id="downloadLinks" class="download-links hidden">
+                        <h4>📁 <span data-i18n="downloadDeduplicatedFile">Download Deduplicated File</span></h4>
+                        <div id="downloadLinksContainer"></div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <p data-i18n="processingMessage">Processing your file...</p>
+    </div>
+
+    <script>
+        // Translation system
+        let translations = {
+            en: {
+                title: "GeoJSON Deduplicator Tool",
+                subtitle: "Detect and remove duplicate features from GeoJSON files",
+                privacy: "Your files and any of their content is only processed locally in your browser and none of your information is sent to anyone else.",
+                license: "This software is free, released under GPLv3 open source license.",
+                inputPanel: "Input File",
+                analysisPanel: "Analysis",
+                dropFile: "Drop your GeoJSON/JSON file here",
+                orClickBrowse: "or click to browse",
+                features: "Features",
+                uniqueFeatures: "Unique Features",
+                duplicateGroups: "Duplicate Groups",
+                                 totalDuplicates: "Total Duplicates",
+                 identicalGroups: "Identical Groups",
+                 differentGroups: "Different Groups",
+                                 duplicateFeatures: "Duplicate Features:",
+                 colorExplanation: "Groups are red when features have different properties, yellow when all properties match.",
+                noDuplicatesFound: "No duplicate features found! Your file is already clean.",
+                removeDuplicates: "Remove Duplicates",
+                reset: "Reset",
+                downloadDeduplicatedFile: "Download Deduplicated File",
+                pleaseProvideFile: "Please provide a file",
+                jsonValid: "JSON is valid!",
+                failedToReadFile: "Failed to read file: ",
+                fileTooLarge: "File is too large. Maximum size is 100MB.",
+                invalidGeoJSON: "Invalid GeoJSON structure",
+                invalidGeoJSONStructure: "Invalid GeoJSON structure",
+                missingTypeField: "Missing 'type' field",
+                invalidTypeField: "Invalid 'type' field",
+                invalidFeaturesArray: "Invalid 'features' array",
+                noValidDataToProcess: "No valid data to process",
+                processingFailed: "Processing failed: ",
+                successfullyDeduplicated: "Successfully deduplicated ",
+                featuresCount: " features!",
+                useFixerApp: "Invalid GeoJSON detected. Please use the GeoJSON Fixer app to validate and fix your file before using the deduplicator.",
+                processingMessage: "Processing your file...",
+                                 downloadLatest: "Download latest version and other tools on",
+                duplicateGroup: "Duplicate Group",
+                feature: "Feature",
+                noProperties: "No properties",
+                                 copied: "Copied!",
+                 differentPropertiesTitle: "Duplicates with different properties:",
+                 identicalPropertiesTitle: "Duplicates with identical properties:"
+            },
+            es: {
+                title: "Herramienta de Deduplicación de GeoJSON",
+                subtitle: "Detecta y elimina características duplicadas de archivos GeoJSON",
+                privacy: "Tus archivos y todo su contenido se procesa únicamente localmente en tu navegador y ninguna de tu información se envía a nadie más.",
+                license: "Este software es gratuito, liberado bajo licencia de código abierto GPLv3.",
+                                 downloadLatest: "Descarga la última versión y otras herramientas en",
+                inputPanel: "Archivo de Entrada",
+                analysisPanel: "Análisis",
+                dropFile: "Suelta tu archivo GeoJSON/JSON aquí",
+                orClickBrowse: "o haz clic para explorar",
+                features: "Características",
+                uniqueFeatures: "Características Únicas",
+                duplicateGroups: "Grupos Duplicados",
+                totalDuplicates: "Total Duplicados",
+                identicalGroups: "Grupos Idénticos",
+                differentGroups: "Grupos Diferentes",
+                duplicateFeatures: "Características Duplicadas:",
+                colorExplanation: "Los grupos son rojos cuando las características tienen propiedades diferentes, amarillos cuando todas las propiedades coinciden.",
+                noDuplicatesFound: "¡No se encontraron características duplicadas! Tu archivo ya está limpio.",
+                removeDuplicates: "Eliminar Duplicados",
+                reset: "Reiniciar",
+                downloadDeduplicatedFile: "Descargar Archivo Deduplicado",
+                pleaseProvideFile: "Por favor proporciona un archivo",
+                jsonValid: "¡JSON es válido!",
+                failedToReadFile: "Error al leer archivo: ",
+                fileTooLarge: "El archivo es demasiado grande. Tamaño máximo es 100MB.",
+                invalidGeoJSON: "Estructura GeoJSON inválida",
+                invalidGeoJSONStructure: "Estructura GeoJSON inválida",
+                missingTypeField: "Campo 'type' faltante",
+                invalidTypeField: "Campo 'type' inválido",
+                invalidFeaturesArray: "Array 'features' inválido",
+                noValidDataToProcess: "No hay datos válidos para procesar",
+                processingFailed: "El procesamiento falló: ",
+                successfullyDeduplicated: "Deduplicado exitosamente ",
+                featuresCount: " características!",
+                useFixerApp: "GeoJSON inválido detectado. Por favor usa la aplicación GeoJSON Fixer para validar y corregir tu archivo antes de usar el deduplicador.",
+                processingMessage: "Procesando tu archivo...",
+                duplicateGroup: "Grupo Duplicado",
+                feature: "Característica",
+                noProperties: "Sin propiedades",
+                                 copied: "¡Copiado!",
+                 differentPropertiesTitle: "Duplicados con propiedades diferentes:",
+                 identicalPropertiesTitle: "Duplicados con propiedades idénticas:"
+            },
+            pt: {
+                title: "Ferramenta de Deduplicação de GeoJSON",
+                subtitle: "Detecta e remove características duplicadas de arquivos GeoJSON",
+                privacy: "Seus arquivos e todo seu conteúdo é processado apenas localmente no seu navegador e nenhuma de suas informações é enviada para ninguém mais.",
+                license: "Este software é gratuito, liberado sob licença de código aberto GPLv3.",
+                                 downloadLatest: "Baixe a versão mais recente e outras ferramentas em",
+                inputPanel: "Arquivo de Entrada",
+                analysisPanel: "Análise",
+                dropFile: "Solte seu arquivo GeoJSON/JSON aqui",
+                orClickBrowse: "ou clique para navegar",
+                features: "Características",
+                uniqueFeatures: "Características Únicas",
+                duplicateGroups: "Grupos Duplicados",
+                totalDuplicates: "Total Duplicados",
+                identicalGroups: "Grupos Idênticos",
+                differentGroups: "Grupos Diferentes",
+                duplicateFeatures: "Características Duplicadas:",
+                colorExplanation: "Os grupos são vermelhos quando as características têm propriedades diferentes, amarelos quando todas as propriedades coincidem.",
+                noDuplicatesFound: "Nenhuma característica duplicada encontrada! Seu arquivo já está limpo.",
+                removeDuplicates: "Remover Duplicados",
+                reset: "Reiniciar",
+                downloadDeduplicatedFile: "Baixar Arquivo Deduplicado",
+                pleaseProvideFile: "Por favor forneça um arquivo",
+                jsonValid: "JSON é válido!",
+                failedToReadFile: "Falha ao ler arquivo: ",
+                fileTooLarge: "O arquivo é muito grande. Tamanho máximo é 100MB.",
+                invalidGeoJSON: "Estrutura GeoJSON inválida",
+                invalidGeoJSONStructure: "Estrutura GeoJSON inválida",
+                missingTypeField: "Campo 'type' ausente",
+                invalidTypeField: "Campo 'type' inválido",
+                invalidFeaturesArray: "Array 'features' inválido",
+                noValidDataToProcess: "Não há dados válidos para processar",
+                processingFailed: "O processamento falhou: ",
+                successfullyDeduplicated: "Deduplicado com sucesso ",
+                featuresCount: " características!",
+                useFixerApp: "GeoJSON inválido detectado. Por favor use a aplicação GeoJSON Fixer para validar e corrigir seu arquivo antes de usar o deduplicador.",
+                processingMessage: "Processando seu arquivo...",
+                duplicateGroup: "Grupo Duplicado",
+                feature: "Característica",
+                noProperties: "Sem propriedades",
+                                 copied: "Copiado!",
+                 differentPropertiesTitle: "Duplicados com propriedades diferentes:",
+                 identicalPropertiesTitle: "Duplicados com propriedades idênticas:"
+            }
+        };
+
+        class GeoJSONDeduplicator {
+            constructor() {
+                let loadedFile = null;
+                let features = [];
+                let duplicateGroups = [];
+                let selectedFeatures = new Map();
+                let eventListeners = new Map();
+                let currentLanguage = 'en';
+                
+                this.loadedFile = loadedFile;
+                this.features = features;
+                this.duplicateGroups = duplicateGroups;
+                this.selectedFeatures = selectedFeatures;
+                this.eventListeners = eventListeners;
+                this.currentLanguage = currentLanguage;
+                
+                this.initializeEventListeners();
+                this.initializeLanguage();
+            }
+
+            initializeEventListeners() {
+                const dropArea = document.getElementById('dropArea');
+                const fileInput = document.getElementById('fileInput');
+
+                // File upload handlers
+                this.addEventListener(dropArea, 'click', () => fileInput.click());
+                this.addEventListener(dropArea, 'dragover', this.handleDragOver.bind(this));
+                this.addEventListener(dropArea, 'dragleave', this.handleDragLeave.bind(this));
+                this.addEventListener(dropArea, 'drop', this.handleDrop.bind(this));
+                this.addEventListener(fileInput, 'change', this.handleFileSelect.bind(this));
+
+                // Button handlers
+                this.addEventListener(document.getElementById('removeDuplicatesBtn'), 'click', this.removeDuplicates.bind(this));
+                this.addEventListener(document.getElementById('resetBtn'), 'click', this.reset.bind(this));
+
+                // Language selector
+                this.addEventListener(document.getElementById('languageSelect'), 'change', this.changeLanguage.bind(this));
+            }
+
+            addEventListener(element, event, handler) {
+                element.addEventListener(event, handler);
+                const key = `${element.id || 'unknown'}_${event}`;
+                if (!this.eventListeners.has(key)) {
+                    this.eventListeners.set(key, []);
+                }
+                this.eventListeners.get(key).push({ element, event, handler });
+            }
+
+            initializeLanguage() {
+                // Set default language or load from localStorage
+                const savedLanguage = localStorage.getItem('preferredLanguage') || 'en';
+                document.getElementById('languageSelect').value = savedLanguage;
+                this.currentLanguage = savedLanguage;
+                this.updateTranslations();
+            }
+
+            changeLanguage(event) {
+                this.currentLanguage = event.target.value;
+                localStorage.setItem('preferredLanguage', this.currentLanguage);
+                this.updateTranslations();
+            }
+
+            updateTranslations() {
+                const elements = document.querySelectorAll('[data-i18n]');
+                elements.forEach(element => {
+                    const key = element.getAttribute('data-i18n');
+                    const translation = translations[this.currentLanguage][key];
+                    if (translation) {
+                        element.textContent = translation;
+                    }
+                });
+            }
+
+            handleDragOver(e) {
+                e.preventDefault();
+                document.getElementById('dropArea').classList.add('is-active');
+            }
+
+            handleDragLeave(e) {
+                e.preventDefault();
+                document.getElementById('dropArea').classList.remove('is-active');
+            }
+
+            handleDrop(e) {
+                e.preventDefault();
+                document.getElementById('dropArea').classList.remove('is-active');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    this.loadFile(files[0]);
+                }
+            }
+
+            handleFileSelect(e) {
+                const files = e.target.files;
+                if (files.length > 0) {
+                    this.loadFile(files[0]);
+                }
+            }
+
+            async loadFile(file) {
+                try {
+                    const maxSize = 100 * 1024 * 1024; // 100MB
+                    if (file.size > maxSize) {
+                        this.showError(this.getTranslation('fileTooLarge'));
+                        return;
+                    }
+
+                    const text = await file.text();
+                    const validation = this.validateAndProcessFile(text, file.name);
+                    if (validation.isValid) {
+                        this.loadedFile = {
+                            name: file.name,
+                            data: validation.data,
+                            features: validation.features
+                        };
+                        this.features = validation.features;
+                        this.analyzeDuplicates();
+                        this.updateFileInfo();
+                    }
+                } catch (error) {
+                    this.showError(this.getTranslation('failedToReadFile') + error.message);
+                }
+            }
+
+            validateAndProcessFile(text, fileName) {
+                if (!text.trim()) {
+                    this.showError(this.getTranslation('pleaseProvideFile'));
+                    return { isValid: false };
+                }
+
+                try {
+                    const parsed = JSON.parse(text);
+                    const geoJSONValidation = this.validateGeoJSONStructure(parsed);
+                    if (!geoJSONValidation.isValid) {
+                        this.showError(this.getTranslation('useFixerApp'));
+                        return { isValid: false };
+                    }
+                    
+                    const features = this.extractFeatures(parsed);
+                    this.clearErrors();
+                    this.showSuccess(this.getTranslation('jsonValid'));
+                    return { isValid: true, data: parsed, features: features };
+                } catch (error) {
+                    this.showError(this.getTranslation('useFixerApp'));
+                    return { isValid: false };
+                }
+            }
+
+            validateGeoJSONStructure(data) {
+                if (!data || typeof data !== 'object') {
+                    return { isValid: false, error: this.getTranslation('invalidGeoJSONStructure') };
+                }
+
+                if (!data.type) {
+                    return { isValid: false, error: this.getTranslation('missingTypeField') };
+                }
+
+                const validTypes = ['Feature', 'FeatureCollection', 'Point', 'LineString', 'Polygon', 'MultiPoint', 'MultiLineString', 'MultiPolygon', 'GeometryCollection'];
+                if (!validTypes.includes(data.type)) {
+                    return { isValid: false, error: this.getTranslation('invalidTypeField') };
+                }
+
+                if (data.type === 'FeatureCollection') {
+                    if (!Array.isArray(data.features)) {
+                        return { isValid: false, error: this.getTranslation('invalidFeaturesArray') };
+                    }
+                }
+
+                return { isValid: true };
+            }
+
+            extractFeatures(data) {
+                const features = [];
+
+                if (data.type === 'FeatureCollection') {
+                    return data.features || [];
+                } else if (data.type === 'Feature') {
+                    return [data];
+                } else if (data.type && ['Point', 'LineString', 'Polygon', 'MultiPoint', 'MultiLineString', 'MultiPolygon'].includes(data.type)) {
+                    return [{
+                        type: 'Feature',
+                        geometry: data,
+                        properties: {}
+                    }];
+                } else if (Array.isArray(data)) {
+                    data.forEach(item => {
+                        features.push(...this.extractFeatures(item));
+                    });
+                }
+
+                return features;
+            }
+
+            analyzeDuplicates() {
+                const geometryMap = new Map();
+                this.duplicateGroups = [];
+                this.selectedFeatures.clear();
+
+                // Group features by geometry
+                this.features.forEach((feature, index) => {
+                    if (feature.geometry) {
+                        const geometryKey = JSON.stringify(feature.geometry);
+                        if (!geometryMap.has(geometryKey)) {
+                            geometryMap.set(geometryKey, []);
+                        }
+                        geometryMap.get(geometryKey).push({ feature, index });
+                    }
+                });
+
+                // Find duplicate groups
+                geometryMap.forEach((group, geometryKey) => {
+                    if (group.length > 1) {
+                        this.duplicateGroups.push(group);
+                        // Auto-select the first occurrence
+                        this.selectedFeatures.set(geometryKey, group[0]);
+                    }
+                });
+
+                this.updateDuplicatesDisplay();
+                this.updateStats();
+            }
+
+                         updateDuplicatesDisplay() {
+                 const differentContainer = document.getElementById('differentPropertiesContainer');
+                 const identicalContainer = document.getElementById('identicalPropertiesContainer');
+                 const duplicatesSection = document.getElementById('duplicatesSection');
+                 const noDuplicatesMessage = document.getElementById('noDuplicatesMessage');
+                 const actionButtons = document.getElementById('actionButtons');
+
+                 differentContainer.innerHTML = '';
+                 identicalContainer.innerHTML = '';
+
+                 if (this.duplicateGroups.length === 0) {
+                     duplicatesSection.classList.add('hidden');
+                     noDuplicatesMessage.classList.remove('hidden');
+                     actionButtons.classList.add('hidden');
+                     return;
+                 }
+
+                 duplicatesSection.classList.remove('hidden');
+                 noDuplicatesMessage.classList.add('hidden');
+                 actionButtons.classList.remove('hidden');
+
+                 // Separate groups by property type
+                 const differentGroups = [];
+                 const identicalGroups = [];
+
+                 this.duplicateGroups.forEach((group, groupIndex) => {
+                     if (this.checkIdenticalProperties(group)) {
+                         identicalGroups.push({ group, groupIndex });
+                     } else {
+                         differentGroups.push({ group, groupIndex });
+                     }
+                 });
+
+                 // Get references to collapsible sections
+                 const differentSection = document.querySelector('#differentPropertiesHeader')?.closest('.collapsible-section');
+                 const identicalSection = document.querySelector('#identicalPropertiesHeader')?.closest('.collapsible-section');
+                 
+                 // Hide sections if they have 0 groups
+                 if (differentSection) {
+                     if (differentGroups.length === 0) {
+                         differentSection.classList.add('hidden');
+                     } else {
+                         differentSection.classList.remove('hidden');
+                     }
+                 }
+                 
+                 if (identicalSection) {
+                     if (identicalGroups.length === 0) {
+                         identicalSection.classList.add('hidden');
+                     } else {
+                         identicalSection.classList.remove('hidden');
+                     }
+                 }
+                 
+                                 // Update section headers with counts
+                const differentHeader = document.getElementById('differentPropertiesTitle');
+                const identicalHeader = document.getElementById('identicalPropertiesTitle');
+                
+                if (differentHeader) {
+                    differentHeader.textContent = `${this.getTranslation('differentPropertiesTitle')} ${differentGroups.length} groups`;
+                }
+                if (identicalHeader) {
+                    identicalHeader.textContent = `${this.getTranslation('identicalPropertiesTitle')} ${identicalGroups.length} groups`;
+                }
+
+                 // Render different property groups
+                 differentGroups.forEach(({ group, groupIndex }) => {
+                     const geometryKey = JSON.stringify(group[0].feature.geometry);
+                     const selectedFeature = this.selectedFeatures.get(geometryKey);
+
+                     // Check if all features have identical properties
+                     const hasIdenticalProperties = this.checkIdenticalProperties(group);
+
+                                           const groupDiv = document.createElement('div');
+                      groupDiv.className = 'duplicate-group';
+                      if (!hasIdenticalProperties) {
+                          groupDiv.classList.add('different-properties');
+                      }
+
+                      const header = document.createElement('div');
+                      header.className = 'duplicate-header';
+                      if (!hasIdenticalProperties) {
+                          header.classList.add('duplicate-header-different');
+                      }
+                    
+                    // Create header left section with title and preview
+                    const headerLeft = document.createElement('div');
+                    headerLeft.className = 'duplicate-header-left';
+                    
+                    const title = document.createElement('div');
+                    title.className = 'duplicate-header-title';
+                    title.textContent = `${this.getTranslation('duplicateGroup')} ${groupIndex + 1}`;
+                    
+                    const preview = document.createElement('div');
+                    preview.className = 'duplicate-header-preview';
+                    const geometryString = JSON.stringify(group[0].feature.geometry);
+                    const previewText = geometryString.length > 60 ? geometryString.substring(0, 60) + '...' : geometryString;
+                    preview.textContent = previewText;
+                    preview.title = 'Click to copy full coordinates';
+                    
+                    // Add copy functionality
+                    preview.addEventListener('click', () => {
+                        navigator.clipboard.writeText(geometryString).then(() => {
+                            const originalText = preview.textContent;
+                            preview.textContent = this.getTranslation('copied');
+                            preview.style.background = 'rgba(40, 167, 69, 0.3)';
+                            setTimeout(() => {
+                                preview.textContent = originalText;
+                                preview.style.background = 'rgba(255, 255, 255, 0.3)';
+                            }, 1000);
+                        }).catch(err => {
+                            console.error('Failed to copy: ', err);
+                        });
+                    });
+                    
+                    headerLeft.appendChild(title);
+                    headerLeft.appendChild(preview);
+                    
+                    // Create header right section with count
+                    const headerRight = document.createElement('div');
+                    headerRight.className = 'duplicate-header-right';
+                    
+                                         const count = document.createElement('span');
+                     count.className = 'duplicate-count';
+                     if (!hasIdenticalProperties) {
+                         count.classList.add('different-properties');
+                     }
+                     count.textContent = `${group.length} features`;
+                    
+                    headerRight.appendChild(count);
+                    
+                    header.appendChild(headerLeft);
+                    header.appendChild(headerRight);
+
+                    const itemsDiv = document.createElement('div');
+                    itemsDiv.className = 'duplicate-items';
+
+                    // Create a side-by-side comparison layout
+                    const comparisonDiv = document.createElement('div');
+                    comparisonDiv.className = 'comparison-layout';
+
+                    group.forEach((item, itemIndex) => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'duplicate-item';
+                        if (item === selectedFeature) {
+                            itemDiv.classList.add('selected');
+                        }
+
+                        const itemHeader = document.createElement('div');
+                        itemHeader.className = 'duplicate-item-header';
+                        itemHeader.innerHTML = `
+                            <input type="radio" name="group_${groupIndex}" value="${itemIndex}" 
+                                   class="radio-selector" ${item === selectedFeature ? 'checked' : ''}>
+                            <span>${this.getTranslation('feature')} ${item.index + 1}</span>
+                        `;
+
+                        const itemContent = document.createElement('div');
+                        itemContent.className = 'duplicate-item-content';
+
+                        // Display properties
+                        if (item.feature.properties && Object.keys(item.feature.properties).length > 0) {
+                            const propertiesGrid = document.createElement('div');
+                            propertiesGrid.className = 'properties-grid';
+
+                            Object.entries(item.feature.properties).forEach(([key, value]) => {
+                                const propertyItem = document.createElement('div');
+                                propertyItem.className = 'property-item';
+                                propertyItem.innerHTML = `
+                                    <div class="property-key">${key}:</div>
+                                    <div class="property-value">${JSON.stringify(value)}</div>
+                                `;
+                                propertiesGrid.appendChild(propertyItem);
+                            });
+
+                            itemContent.appendChild(propertiesGrid);
+                        } else {
+                            const noProperties = document.createElement('div');
+                            noProperties.style.color = '#6c757d';
+                            noProperties.style.fontStyle = 'italic';
+                            noProperties.textContent = this.getTranslation('noProperties');
+                            itemContent.appendChild(noProperties);
+                        }
+
+                        itemHeader.addEventListener('click', () => {
+                            // Update radio button
+                            itemHeader.querySelector('input').checked = true;
+                            
+                            // Update selected feature
+                            this.selectedFeatures.set(geometryKey, item);
+                            
+                            // Update visual selection
+                            group.forEach((g, i) => {
+                                const groupItem = comparisonDiv.children[i];
+                                if (i === itemIndex) {
+                                    groupItem.classList.add('selected');
+                                } else {
+                                    groupItem.classList.remove('selected');
+                                }
+                            });
+                        });
+
+                        itemDiv.appendChild(itemHeader);
+                        itemDiv.appendChild(itemContent);
+                        comparisonDiv.appendChild(itemDiv);
+                    });
+
+                    itemsDiv.appendChild(comparisonDiv);
+                                         groupDiv.appendChild(header);
+                     groupDiv.appendChild(itemsDiv);
+                     differentContainer.appendChild(groupDiv);
+                 });
+
+                 // Render identical property groups
+                 identicalGroups.forEach(({ group, groupIndex }) => {
+                     const geometryKey = JSON.stringify(group[0].feature.geometry);
+                     const selectedFeature = this.selectedFeatures.get(geometryKey);
+
+                     const groupDiv = document.createElement('div');
+                     groupDiv.className = 'duplicate-group';
+
+                     const header = document.createElement('div');
+                     header.className = 'duplicate-header';
+                     
+                     // Create header left section with title and preview
+                     const headerLeft = document.createElement('div');
+                     headerLeft.className = 'duplicate-header-left';
+                     
+                     const title = document.createElement('div');
+                     title.className = 'duplicate-header-title';
+                     title.textContent = `${this.getTranslation('duplicateGroup')} ${groupIndex + 1}`;
+                     
+                     const preview = document.createElement('div');
+                     preview.className = 'duplicate-header-preview';
+                     const geometryString = JSON.stringify(group[0].feature.geometry);
+                     const previewText = geometryString.length > 60 ? geometryString.substring(0, 60) + '...' : geometryString;
+                     preview.textContent = previewText;
+                     preview.title = 'Click to copy full coordinates';
+                     
+                     // Add copy functionality
+                     preview.addEventListener('click', () => {
+                         navigator.clipboard.writeText(geometryString).then(() => {
+                             const originalText = preview.textContent;
+                             preview.textContent = this.getTranslation('copied');
+                             preview.style.background = 'rgba(40, 167, 69, 0.3)';
+                             setTimeout(() => {
+                                 preview.textContent = originalText;
+                                 preview.style.background = 'rgba(255, 255, 255, 0.3)';
+                             }, 1000);
+                         }).catch(err => {
+                             console.error('Failed to copy: ', err);
+                         });
+                     });
+                     
+                     headerLeft.appendChild(title);
+                     headerLeft.appendChild(preview);
+                     
+                     // Create header right section with count
+                     const headerRight = document.createElement('div');
+                     headerRight.className = 'duplicate-header-right';
+                     
+                     const count = document.createElement('span');
+                     count.className = 'duplicate-count';
+                     count.textContent = `${group.length} features`;
+                     
+                     headerRight.appendChild(count);
+                     
+                     header.appendChild(headerLeft);
+                     header.appendChild(headerRight);
+
+                     const itemsDiv = document.createElement('div');
+                     itemsDiv.className = 'duplicate-items';
+
+                     // Create a side-by-side comparison layout
+                     const comparisonDiv = document.createElement('div');
+                     comparisonDiv.className = 'comparison-layout';
+
+                     group.forEach((item, itemIndex) => {
+                         const itemDiv = document.createElement('div');
+                         itemDiv.className = 'duplicate-item';
+                         if (item === selectedFeature) {
+                             itemDiv.classList.add('selected');
+                         }
+
+                         const itemHeader = document.createElement('div');
+                         itemHeader.className = 'duplicate-item-header';
+                         itemHeader.innerHTML = `
+                             <input type="radio" name="group_${groupIndex}" value="${itemIndex}" 
+                                    class="radio-selector" ${item === selectedFeature ? 'checked' : ''}>
+                             <span>${this.getTranslation('feature')} ${item.index + 1}</span>
+                         `;
+
+                         const itemContent = document.createElement('div');
+                         itemContent.className = 'duplicate-item-content';
+
+                         // Display properties
+                         if (item.feature.properties && Object.keys(item.feature.properties).length > 0) {
+                             const propertiesGrid = document.createElement('div');
+                             propertiesGrid.className = 'properties-grid';
+
+                             Object.entries(item.feature.properties).forEach(([key, value]) => {
+                                 const propertyItem = document.createElement('div');
+                                 propertyItem.className = 'property-item';
+                                 propertyItem.innerHTML = `
+                                     <div class="property-key">${key}:</div>
+                                     <div class="property-value">${JSON.stringify(value)}</div>
+                                 `;
+                                 propertiesGrid.appendChild(propertyItem);
+                             });
+
+                             itemContent.appendChild(propertiesGrid);
+                         } else {
+                             const noProperties = document.createElement('div');
+                             noProperties.style.color = '#6c757d';
+                             noProperties.style.fontStyle = 'italic';
+                             noProperties.textContent = this.getTranslation('noProperties');
+                             itemContent.appendChild(noProperties);
+                         }
+
+                         itemHeader.addEventListener('click', () => {
+                             // Update radio button
+                             itemHeader.querySelector('input').checked = true;
+                             
+                             // Update selected feature
+                             this.selectedFeatures.set(geometryKey, item);
+                             
+                             // Update visual selection
+                             group.forEach((g, i) => {
+                                 const groupItem = comparisonDiv.children[i];
+                                 if (i === itemIndex) {
+                                     groupItem.classList.add('selected');
+                                 } else {
+                                     groupItem.classList.remove('selected');
+                                 }
+                             });
+                         });
+
+                         itemDiv.appendChild(itemHeader);
+                         itemDiv.appendChild(itemContent);
+                         comparisonDiv.appendChild(itemDiv);
+                     });
+
+                     itemsDiv.appendChild(comparisonDiv);
+                     groupDiv.appendChild(header);
+                     groupDiv.appendChild(itemsDiv);
+                     identicalContainer.appendChild(groupDiv);
+                 });
+                 
+                 // Update translations for dynamically created content
+                 this.updateTranslations();
+                 
+                 // Initialize collapsible functionality
+                 this.initializeCollapsibleSections();
+             }
+
+            updateFileInfo() {
+                const fileInfo = document.getElementById('fileInfo');
+                const fileName = document.getElementById('fileName');
+                const fileStats = document.getElementById('fileStats');
+                const inputPanel = document.querySelector('.panel:first-child');
+                const analysisPanel = document.querySelector('.panel:nth-child(2)');
+
+                if (this.loadedFile) {
+                    fileName.textContent = this.loadedFile.name;
+                    fileStats.textContent = `${this.features.length} features`;
+                    fileInfo.classList.remove('hidden');
+                    
+                    // Hide input panel and show analysis panel
+                    inputPanel.classList.add('hidden');
+                    analysisPanel.classList.remove('hidden');
+                } else {
+                    fileInfo.classList.add('hidden');
+                    
+                    // Show input panel and hide analysis panel
+                    inputPanel.classList.remove('hidden');
+                    analysisPanel.classList.add('hidden');
+                }
+            }
+
+                         updateStats() {
+                 const totalFeatures = this.features.length;
+                 const uniqueFeatures = totalFeatures - this.duplicateGroups.reduce((sum, group) => sum + group.length - 1, 0);
+                 const duplicateGroups = this.duplicateGroups.length;
+                 const totalDuplicates = this.duplicateGroups.reduce((sum, group) => sum + group.length - 1, 0);
+                 
+                 // Count groups by property type
+                 let identicalGroups = 0;
+                 let differentGroups = 0;
+                 
+                 this.duplicateGroups.forEach(group => {
+                     if (this.checkIdenticalProperties(group)) {
+                         identicalGroups++;
+                     } else {
+                         differentGroups++;
+                     }
+                 });
+
+                 document.getElementById('totalFeatures').textContent = totalFeatures;
+                 document.getElementById('uniqueFeatures').textContent = uniqueFeatures;
+                 document.getElementById('duplicateGroups').textContent = duplicateGroups;
+                 document.getElementById('totalDuplicates').textContent = totalDuplicates;
+                 document.getElementById('identicalGroups').textContent = identicalGroups;
+                 document.getElementById('differentGroups').textContent = differentGroups;
+             }
+
+            async removeDuplicates() {
+                if (this.duplicateGroups.length === 0) {
+                    this.showError(this.getTranslation('noValidDataToProcess'));
+                    return;
+                }
+
+                this.showLoading(true);
+                this.updateProgress(0);
+
+                try {
+                    // Create deduplicated features array
+                    const deduplicatedFeatures = [];
+                    const processedGeometries = new Set();
+
+                    this.features.forEach(feature => {
+                        if (feature.geometry) {
+                            const geometryKey = JSON.stringify(feature.geometry);
+                            
+                            if (processedGeometries.has(geometryKey)) {
+                                // Check if this is the selected feature for this geometry
+                                const selectedFeature = this.selectedFeatures.get(geometryKey);
+                                if (selectedFeature && selectedFeature.feature === feature) {
+                                    deduplicatedFeatures.push(feature);
+                                }
+                            } else {
+                                // First occurrence of this geometry
+                                deduplicatedFeatures.push(feature);
+                                processedGeometries.add(geometryKey);
+                            }
+                        } else {
+                            // Features without geometry are always included
+                            deduplicatedFeatures.push(feature);
+                        }
+                    });
+
+                    this.updateProgress(100);
+
+                    // Download deduplicated file
+                    this.downloadDeduplicatedFile(deduplicatedFeatures);
+                    
+                    this.showSuccess(this.getTranslation('successfullyDeduplicated') + 
+                                  deduplicatedFeatures.length + 
+                                  this.getTranslation('featuresCount'));
+                    
+                } catch (error) {
+                    this.showError(this.getTranslation('processingFailed') + error.message);
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            downloadDeduplicatedFile(features) {
+                const container = document.getElementById('downloadLinksContainer');
+                container.innerHTML = '';
+
+                const geoJSON = {
+                    type: 'FeatureCollection',
+                    features: features
+                };
+
+                const blob = new Blob([JSON.stringify(geoJSON, null, 2)], {
+                    type: 'application/json'
+                });
+                
+                const url = URL.createObjectURL(blob);
+                
+                // Create filename based on original file
+                const baseName = this.loadedFile.name.replace(/\.[^/.]+$/, ''); // Remove extension
+                const fileName = `${baseName}_deduplicated.geojson`;
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = fileName;
+                link.className = 'download-link';
+                link.innerHTML = `📁 ${fileName} (${features.length} features)`;
+                
+                container.appendChild(link);
+                
+                // Auto-download after a short delay
+                setTimeout(() => {
+                    link.click();
+                    URL.revokeObjectURL(url);
+                }, 100);
+
+                document.getElementById('downloadLinks').classList.remove('hidden');
+            }
+
+            reset() {
+                this.loadedFile = null;
+                this.features = [];
+                this.duplicateGroups = [];
+                this.selectedFeatures.clear();
+
+                document.getElementById('errorMessages').innerHTML = '';
+                document.getElementById('fileInput').value = '';
+                document.getElementById('fileInfo').classList.add('hidden');
+                document.getElementById('duplicatesSection').classList.add('hidden');
+                document.getElementById('noDuplicatesMessage').classList.add('hidden');
+                document.getElementById('actionButtons').classList.add('hidden');
+                document.getElementById('downloadLinks').classList.add('hidden');
+                
+                // Hide collapsible sections
+                const differentSection = document.querySelector('#differentPropertiesHeader')?.closest('.collapsible-section');
+                const identicalSection = document.querySelector('#identicalPropertiesHeader')?.closest('.collapsible-section');
+                if (differentSection) differentSection.classList.add('hidden');
+                if (identicalSection) identicalSection.classList.add('hidden');
+                
+                // Show input panel and hide analysis panel
+                const inputPanel = document.querySelector('.panel:first-child');
+                const analysisPanel = document.querySelector('.panel:nth-child(2)');
+                inputPanel.classList.remove('hidden');
+                analysisPanel.classList.add('hidden');
+                
+                // Reset statistics
+                this.updateStats();
+            }
+
+            getTranslation(key) {
+                return translations[this.currentLanguage][key] || key;
+            }
+
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.innerHTML = `⚠️ ${message}`;
+                
+                const container = document.getElementById('errorMessages');
+                container.innerHTML = '';
+                container.appendChild(errorDiv);
+            }
+
+            showSuccess(message) {
+                const successDiv = document.createElement('div');
+                successDiv.className = 'success-message';
+                successDiv.innerHTML = `✔️ ${message}`;
+                
+                const container = document.getElementById('errorMessages');
+                container.innerHTML = '';
+                container.appendChild(successDiv);
+            }
+
+            clearErrors() {
+                document.getElementById('errorMessages').innerHTML = '';
+            }
+
+            showLoading(show) {
+                const overlay = document.getElementById('loadingOverlay');
+                if (show) {
+                    overlay.classList.add('show');
+                } else {
+                    overlay.classList.remove('show');
+                }
+            }
+
+                         checkIdenticalProperties(group) {
+                 if (group.length <= 1) return true;
+                 
+                 // Get properties from the first feature
+                 const firstProperties = group[0].feature.properties || {};
+                 const firstPropertiesKeys = Object.keys(firstProperties);
+                 
+                 // Check if all features have the same properties
+                 for (let i = 1; i < group.length; i++) {
+                     const currentProperties = group[i].feature.properties || {};
+                     const currentPropertiesKeys = Object.keys(currentProperties);
+                     
+                     // Check if they have the same number of properties
+                     if (firstPropertiesKeys.length !== currentPropertiesKeys.length) {
+                         return false;
+                     }
+                     
+                     // Check if all property keys exist and have the same values
+                     for (const key of firstPropertiesKeys) {
+                         if (!currentProperties.hasOwnProperty(key) || 
+                             JSON.stringify(firstProperties[key]) !== JSON.stringify(currentProperties[key])) {
+                             return false;
+                         }
+                     }
+                 }
+                 
+                 return true;
+             }
+
+             updateProgress(percent) {
+                 const progressBar = document.getElementById('progressBar');
+                 const progressFill = document.getElementById('progressFill');
+                 
+                 if (percent > 0) {
+                     progressBar.classList.remove('hidden');
+                     progressFill.style.width = percent + '%';
+                     
+                     if (percent >= 100) {
+                         setTimeout(() => {
+                             progressBar.classList.add('hidden');
+                         }, 1000);
+                     }
+                 }
+             }
+
+             initializeCollapsibleSections() {
+                 const differentHeader = document.getElementById('differentPropertiesHeader');
+                 const identicalHeader = document.getElementById('identicalPropertiesHeader');
+                 const differentContent = document.getElementById('differentPropertiesContent');
+                 const identicalContent = document.getElementById('identicalPropertiesContent');
+
+                 // Different properties section (expanded by default)
+                 differentHeader.addEventListener('click', () => {
+                     const isCollapsed = differentHeader.classList.contains('collapsed');
+                     if (isCollapsed) {
+                         differentHeader.classList.remove('collapsed');
+                         differentContent.classList.remove('collapsed');
+                         differentHeader.querySelector('.toggle-icon').classList.remove('collapsed');
+                     } else {
+                         differentHeader.classList.add('collapsed');
+                         differentContent.classList.add('collapsed');
+                         differentHeader.querySelector('.toggle-icon').classList.add('collapsed');
+                     }
+                 });
+
+                 // Identical properties section (collapsed by default)
+                 identicalHeader.addEventListener('click', () => {
+                     const isCollapsed = identicalHeader.classList.contains('collapsed');
+                     if (isCollapsed) {
+                         identicalHeader.classList.remove('collapsed');
+                         identicalContent.classList.remove('collapsed');
+                         identicalHeader.querySelector('.toggle-icon').classList.remove('collapsed');
+                     } else {
+                         identicalHeader.classList.add('collapsed');
+                         identicalContent.classList.add('collapsed');
+                         identicalHeader.querySelector('.toggle-icon').classList.add('collapsed');
+                     }
+                 });
+             }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            const deduplicator = new GeoJSONDeduplicator();
+        }
+    </script>
+</body>
+</html> 
