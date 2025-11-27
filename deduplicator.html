@@ -21,6 +21,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Deduplicator - GeoRoots</title>
     
     <style>
@@ -919,7 +922,7 @@
                 pleaseProvideFile: "Please provide a file",
                 jsonValid: "JSON is valid!",
                 failedToReadFile: "Failed to read file: ",
-                fileTooLarge: "File is too large. Maximum size is 100MB.",
+                fileTooLarge: "File is too large. Maximum size is 1000MB.",
                 invalidGeoJSON: "Invalid GeoJSON structure",
                 invalidGeoJSONStructure: "Invalid GeoJSON structure",
                 missingTypeField: "Missing 'type' field",
@@ -964,7 +967,7 @@
                 pleaseProvideFile: "Por favor proporciona un archivo",
                 jsonValid: "¡JSON es válido!",
                 failedToReadFile: "Error al leer archivo: ",
-                fileTooLarge: "El archivo es demasiado grande. Tamaño máximo es 100MB.",
+                fileTooLarge: "El archivo es demasiado grande. Tamaño máximo es 1000MB.",
                 invalidGeoJSON: "Estructura GeoJSON inválida",
                 invalidGeoJSONStructure: "Estructura GeoJSON inválida",
                 missingTypeField: "Campo 'type' faltante",
@@ -1008,7 +1011,7 @@
                 pleaseProvideFile: "Por favor forneça um arquivo",
                 jsonValid: "JSON é válido!",
                 failedToReadFile: "Falha ao ler arquivo: ",
-                fileTooLarge: "O arquivo é muito grande. Tamanho máximo é 100MB.",
+                fileTooLarge: "O arquivo é muito grande. Tamanho máximo é 1000MB.",
                 invalidGeoJSON: "Estrutura GeoJSON inválida",
                 invalidGeoJSONStructure: "Estrutura GeoJSON inválida",
                 missingTypeField: "Campo 'type' ausente",
@@ -1130,7 +1133,7 @@
 
             async loadFile(file) {
                 try {
-                    const maxSize = 100 * 1024 * 1024; // 100MB
+                    const maxSize = 1000 * 1024 * 1024; // 1000MB
                     if (file.size > maxSize) {
                         this.showError(this.getTranslation('fileTooLarge'));
                         return;
